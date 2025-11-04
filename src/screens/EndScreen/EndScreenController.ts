@@ -1,12 +1,10 @@
+import { STAGE_HEIGHT, STAGE_WIDTH } from "../../constants.ts";
 import { ScreenController } from "../../types.ts";
-
-import { STAGE_WIDTH, STAGE_HEIGHT } from "../../constants.ts";
 
 import { EndScreenModel } from "./EndScreenModel.ts";
 import { EndScreenView } from "./EndScreenView.ts";
 
 import type { ScreenSwitcher } from "../../types.ts";
-
 import type { Layer } from "konva/lib/Layer";
 
 /**

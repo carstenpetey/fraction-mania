@@ -18,6 +18,7 @@ import Konva from "konva";
 // });
 // layer.add(circle);
 import { MainMenuScreenController } from "./screens/MainMenuScreen/MainMenuScreenController.ts";
+import { PauseScreenController } from "./screens/PauseScreen/PauseScreenController.ts";
 
 import type { Screen, ScreenSwitcher } from "./types.ts";
 
@@ -36,6 +37,10 @@ class App implements ScreenSwitcher {
   private readonly layer: Konva.Layer;
 
   private readonly mainMenuController: MainMenuScreenController;
+  private readonly pauseScreenController: PauseScreenController;
+
+  // track current screen so Esc can toggle game <-> pause
+  private current: Screen["type"] = "menu";
 
   constructor(container: string) {
     // Initialize Konva stage (the main canvas)
@@ -52,16 +57,30 @@ class App implements ScreenSwitcher {
     // Initialize all screen controllers
     // Each controller manages a Model, View, and handles user interactions
     this.mainMenuController = new MainMenuScreenController(this);
+    this.pauseScreenController = new PauseScreenController(this);
 
     // Add all screen groups to the layer
     // All screens exist simultaneously but only one is visible at a time
     this.layer.add(this.mainMenuController.getView().getGroup());
+    this.layer.add(this.pauseScreenController.getView().getGroup());
+
+    // start on main menu
+    this.mainMenuController.show();
+    this.pauseScreenController.hide();
+    this.current = "menu";
 
     // Draw the layer (render everything to the canvas)
     this.layer.draw();
 
-    // Start with menu screen visible
-    this.mainMenuController.getView().show();
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        if (this.current === "game") {
+          this.switchToScreen({ type: "pause" });
+        } else if (this.current === "pause") {
+          this.switchToScreen({ type: "game" });
+        }
+      }
+    });
   }
 
   /**
@@ -76,12 +95,23 @@ class App implements ScreenSwitcher {
   switchToScreen(screen: Screen): void {
     // Hide all screens first by setting their Groups to invisible
     this.mainMenuController.hide();
+    this.pauseScreenController.hide();
     // Show the requested screen based on the screen type
     switch (screen.type) {
       case "menu":
         this.mainMenuController.show();
         break;
+      case "pause":
+        this.pauseScreenController.show(); // <---
+        break;
+      case "game":
+        // If you have a Game controller/view, call show() here.
+        // For now, we just record the state.
+        break;
     }
+
+    this.current = screen.type;
+    this.layer.draw();
   }
 }
 
