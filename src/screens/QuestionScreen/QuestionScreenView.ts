@@ -2,10 +2,10 @@ import Konva from "konva";
 
 import { STAGE_HEIGHT, STAGE_WIDTH } from "../../constants.ts";
 
+import type { Fraction } from "../../models/Fraction.ts";
 import type { View } from "../../types.ts";
-import type { ShapeConfig } from "konva/lib/Shape";
 
-export class GameScreenView implements View {
+export class QuestionScreenView implements View {
   private readonly group: Konva.Group;
   private expressionText: Konva.Text | undefined;
   private readonly answerButtons: Konva.Group[] = [];
@@ -88,20 +88,13 @@ export class GameScreenView implements View {
     }
   }
 
-  updateExpression(expression: {
-    fraction1: { numerator: number; denominator: number };
-    fraction2: { numerator: number; denominator: number };
-    operator: string;
-  }): void {
+  updateExpression(expression: string): void {
     //parameters for updateExpression function
-    const { fraction1, fraction2, operator } = expression;
-    this.expressionText?.text(
-      `${fraction1.numerator}/${fraction1.denominator} ${operator} ${fraction2.numerator}/${fraction2.denominator} = ?`,
-    ); //makes expression text
+    this.expressionText?.text(expression); //makes expression text
     this.expressionText?.offsetX(this.expressionText.width() / 2);
   }
 
-  updateAnswerChoices(choices: Array<{ numerator: number; denominator: number }>): void {
+  updateAnswerChoices(choices: Fraction[]): void {
     //takes in array of answer choices
     choices.forEach((choice, i) => {
       if (this.answerTexts[i]) {

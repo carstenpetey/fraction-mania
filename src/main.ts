@@ -1,25 +1,10 @@
 import Konva from "konva";
 
-// import "./style.css";
-// const stage = new Konva.Stage({
-//   container: "app",
-//   width: window.innerWidth,
-//   height: window.innerHeight,
-// });
-// const layer = new Konva.Layer();
-// stage.add(layer);
-// const circle = new Konva.Circle({
-//   x: stage.width() / 2,
-//   y: stage.height() / 2,
-//   radius: 70,
-//   fill: "red",
-//   stroke: "black",
-//   strokeWidth: 4,
-// });
-// layer.add(circle);
 import { MainMenuScreenController } from "./screens/MainMenuScreen/MainMenuScreenController.ts";
 import { PauseScreenController } from "./screens/PauseScreen/PauseScreenController.ts";
+import { QuestionScreenController } from "./screens/QuestionScreen/QuestionScreenController.ts";
 
+import type { QuestionConfig } from "./services/QuestionService.ts";
 import type { Screen, ScreenSwitcher } from "./types.ts";
 
 /**
@@ -38,6 +23,7 @@ class App implements ScreenSwitcher {
 
   private readonly mainMenuController: MainMenuScreenController;
   private readonly pauseScreenController: PauseScreenController;
+  private readonly gameScreenController: QuestionScreenController;
 
   // track current screen so Esc can toggle game <-> pause
   private current: Screen["type"] = "menu";
@@ -58,11 +44,19 @@ class App implements ScreenSwitcher {
     // Each controller manages a Model, View, and handles user interactions
     this.mainMenuController = new MainMenuScreenController(this);
     this.pauseScreenController = new PauseScreenController(this);
+    this.gameScreenController = new QuestionScreenController(this, {
+      numOperations: 1,
+      maxDenominatorDigits: 2,
+      maxNumeratorDigits: 1,
+      numChoices: 4,
+      operations: ["+", "-"],
+    } as QuestionConfig);
 
     // Add all screen groups to the layer
     // All screens exist simultaneously but only one is visible at a time
     this.layer.add(this.mainMenuController.getView().getGroup());
     this.layer.add(this.pauseScreenController.getView().getGroup());
+    this.layer.add(this.gameScreenController.getView().getGroup());
 
     // start on main menu
     this.mainMenuController.show();
@@ -95,18 +89,19 @@ class App implements ScreenSwitcher {
   switchToScreen(screen: Screen): void {
     // Hide all screens first by setting their Groups to invisible
     this.mainMenuController.hide();
+    this.gameScreenController.hide();
     this.pauseScreenController.hide();
+
     // Show the requested screen based on the screen type
     switch (screen.type) {
       case "menu":
         this.mainMenuController.show();
         break;
       case "pause":
-        this.pauseScreenController.show(); // <---
+        this.pauseScreenController.show();
         break;
       case "game":
-        // If you have a Game controller/view, call show() here.
-        // For now, we just record the state.
+        this.gameScreenController.startQuestion();
         break;
     }
 

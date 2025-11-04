@@ -45,8 +45,8 @@ export default antfu({
         caughtErrorsIgnorePattern: "^_",
       },
     ],
-    "unused-imports/no-unused-vars": [
-      "warn",
+    "ts/no-unused-vars": [
+      "error",
       {
         varsIgnorePattern: "^_",
         argsIgnorePattern: "^_",
