@@ -3,7 +3,6 @@ import Konva from "konva";
 import { MainMenuScreenController } from "./screens/MainMenuScreen/MainMenuScreenController.ts";
 import { PauseScreenController } from "./screens/PauseScreen/PauseScreenController.ts";
 import { QuestionScreenController } from "./screens/QuestionScreen/QuestionScreenController.ts";
-import { EndScreenController } from "./screens/EndScreen/EndScreenController.ts";
 
 import type { QuestionConfig } from "./services/QuestionService.ts";
 import type { Screen, ScreenSwitcher } from "./types.ts";
@@ -25,7 +24,6 @@ class App implements ScreenSwitcher {
   private readonly mainMenuController: MainMenuScreenController;
   private readonly pauseScreenController: PauseScreenController;
   private readonly gameScreenController: QuestionScreenController;
-  private readonly endScreenController: EndScreenController;
 
   // track current screen so Esc can toggle game <-> pause
   private current: Screen["type"] = "menu";
@@ -53,19 +51,16 @@ class App implements ScreenSwitcher {
       numChoices: 4,
       operations: ["+", "-"],
     } as QuestionConfig);
-    this.endScreenController = new EndScreenController(this);
 
     // Add all screen groups to the layer
     // All screens exist simultaneously but only one is visible at a time
     this.layer.add(this.mainMenuController.getView().getGroup());
     this.layer.add(this.pauseScreenController.getView().getGroup());
     this.layer.add(this.gameScreenController.getView().getGroup());
-    this.layer.add(this.endScreenController.getView().getGroup());
 
     // start on main menu
     this.mainMenuController.show();
     this.pauseScreenController.hide();
-    this.endScreenController.hide();
     this.current = "menu";
 
     // Draw the layer (render everything to the canvas)
@@ -96,7 +91,6 @@ class App implements ScreenSwitcher {
     this.mainMenuController.hide();
     this.gameScreenController.hide();
     this.pauseScreenController.hide();
-    this.endScreenController.hide();
 
     // Show the requested screen based on the screen type
     switch (screen.type) {
@@ -108,9 +102,6 @@ class App implements ScreenSwitcher {
         break;
       case "game":
         this.gameScreenController.startQuestion();
-        break;
-      case "end":
-        this.endScreenController.show();
         break;
     }
 
