@@ -10,16 +10,23 @@ export class QuestionScreenController extends ScreenController {
   private readonly model: QuestionScreenModel;
   private readonly view: QuestionScreenView;
   private readonly questionConfig: QuestionConfig;
+  private readonly screenSwitcher: ScreenSwitcher;
+
   // private readonly screenSwitcher: ScreenSwitcher;
 
   constructor(screenSwitcher: ScreenSwitcher, questionConfig: QuestionConfig) {
     super(); // must use this cause GameScreenController extends ScreenController
     // this.screenSwitcher = screenSwitcher;
     this.questionConfig = questionConfig;
+    this.screenSwitcher = screenSwitcher;
 
     // generate new question and initialize model
     this.model = new QuestionScreenModel(QuestionService.generateQuestion(this.questionConfig));
-    this.view = new QuestionScreenView((index) => this.handleAnswerClick(index)); //index is the button that was clicked
+    this.view = new QuestionScreenView(
+      (index) => this.handleAnswerClick(index),
+      () => this.handleHelpClick(),
+    );
+    //index is the button that was clicked
     //the line (index)  => this.handleClick(intex) gets passed into GameScreenView, where it is executed
     //note, the constructor is already called in the main.ts so this calls it again when the answer is clicked
   }
@@ -37,6 +44,11 @@ export class QuestionScreenController extends ScreenController {
     }
 
     this.view.flashFeedback(isCorrect, index);
+  }
+
+  // making sure that help button leads to right place
+  private handleHelpClick(): void {
+    this.screenSwitcher.switchToScreen({ type: "equation_help" });
   }
 
   startQuestion(): void {

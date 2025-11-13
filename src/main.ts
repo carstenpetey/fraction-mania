@@ -1,5 +1,6 @@
 import Konva from "konva";
 
+import { EquationHelpScreenController } from "./screens/EquationHelpScreen/EquationHelpController.ts";
 import { MainMenuScreenController } from "./screens/MainMenuScreen/MainMenuScreenController.ts";
 import { PauseScreenController } from "./screens/PauseScreen/PauseScreenController.ts";
 import { QuestionScreenController } from "./screens/QuestionScreen/QuestionScreenController.ts";
@@ -24,6 +25,7 @@ class App implements ScreenSwitcher {
   private readonly mainMenuController: MainMenuScreenController;
   private readonly pauseScreenController: PauseScreenController;
   private readonly gameScreenController: QuestionScreenController;
+  private readonly equationHelpScreenController: EquationHelpScreenController;
 
   // track current screen so Esc can toggle game <-> pause
   private current: Screen["type"] = "menu";
@@ -51,12 +53,14 @@ class App implements ScreenSwitcher {
       numChoices: 4,
       operations: ["+", "-"],
     } as QuestionConfig);
+    this.equationHelpScreenController = new EquationHelpScreenController(this);
 
     // Add all screen groups to the layer
     // All screens exist simultaneously but only one is visible at a time
     this.layer.add(this.mainMenuController.getView().getGroup());
     this.layer.add(this.pauseScreenController.getView().getGroup());
     this.layer.add(this.gameScreenController.getView().getGroup());
+    this.layer.add(this.equationHelpScreenController.getView().getGroup());
 
     // start on main menu
     this.mainMenuController.show();
@@ -103,6 +107,8 @@ class App implements ScreenSwitcher {
       case "game":
         this.gameScreenController.startQuestion();
         break;
+      case "equation_help":
+        this.equationHelpScreenController.show();
     }
 
     this.current = screen.type;

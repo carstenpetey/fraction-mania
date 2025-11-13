@@ -1,6 +1,6 @@
 // Stage dimensions
-export const STAGE_WIDTH = 800;
-export const STAGE_HEIGHT = 600;
+export const STAGE_WIDTH = window.innerWidth;
+export const STAGE_HEIGHT = window.innerHeight;
 
 // Game settings
 export const GAME_DURATION = 10; // seconds
