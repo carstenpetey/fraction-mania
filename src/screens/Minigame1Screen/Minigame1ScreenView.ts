@@ -1,5 +1,60 @@
 import Konva from "konva";
+
 import type { View } from "../../types.ts";
+
+// --------- Minimal Rational helper ----------
+function gcd(a: number, b: number): number {
+  while (b !== 0) {
+    const t = b;
+    b = a % b;
+    a = t;
+  }
+  return Math.max(1, Math.abs(a));
+}
+
+class Rational {
+  readonly n: number;
+  readonly d: number;
+  constructor(n: number, d: number) {
+    if (d === 0) throw new Error("denominator cannot be 0");
+    const sign = d < 0 ? -1 : 1;
+    const nn = n * sign;
+    const dd = Math.abs(d);
+    const g = gcd(Math.abs(nn), dd);
+    this.n = nn / g;
+    this.d = dd / g;
+  }
+  static zero() {
+    return new Rational(0, 1);
+  }
+  static one() {
+    return new Rational(1, 1);
+  }
+  toNumber() {
+    return this.n / this.d;
+  }
+  toString() {
+    return `${this.n}/${this.d}`;
+  }
+  add(r: Rational) {
+    return new Rational(this.n * r.d + r.n * this.d, this.d * r.d);
+  }
+  sub(r: Rational) {
+    return new Rational(this.n * r.d - r.n * this.d, this.d * r.d);
+  }
+  gt(r: Rational) {
+    return this.n * r.d > r.n * this.d;
+  }
+  closeTo(r: Rational, eps: Rational) {
+    return this.sub(r).abs().toNumber() <= eps.toNumber();
+  }
+  abs() {
+    return new Rational(Math.abs(this.n), this.d);
+  }
+  clampMinZero() {
+    return this.gt(Rational.zero()) ? this : Rational.zero();
+  }
+}
 
 /**
  * Minigame1ScreenView
@@ -25,7 +80,7 @@ export class Minigame1ScreenView implements View {
   private readonly PIZZA_SRC = "/whole-pizza.png"; // served from /public
 
   // Game state
-  private current: Rational = Rational.zero();
+  private current: Rational = new Rational(1, 1);
   private readonly epsilon = new Rational(1, 1000);
 
   // UI refs
@@ -42,25 +97,44 @@ export class Minigame1ScreenView implements View {
 
     this.drawBackground();
 
-    this.loadPizzaTexture().then(() => {
-      this.drawPizzaBaseWithImage();
-      this.drawHUD();
-      this.drawButtons([new Rational(1, 4), new Rational(1, 8), new Rational(1, 2), new Rational(1, 3)]);
-      this.group.getLayer()?.draw();
-    });
+    this.loadPizzaTexture().then(
+      () => {
+        this.drawPizzaBaseWithImage();
+        this.drawHUD();
+        this.drawButtons([
+          new Rational(1, 4),
+          new Rational(1, 8),
+          new Rational(1, 2),
+          new Rational(1, 3),
+        ]);
+        this.group.getLayer()?.draw();
+      },
+      () => console.error("We are coocked"),
+    );
   }
 
   // View interface
-  getGroup(): Konva.Group { return this.group; }
-  show(): void { this.group.visible(true); this.group.getLayer()?.draw(); }
-  hide(): void { this.group.visible(false); this.group.getLayer()?.draw(); }
+  getGroup(): Konva.Group {
+    return this.group;
+  }
+  show(): void {
+    this.group.visible(true);
+    this.group.getLayer()?.draw();
+  }
+  hide(): void {
+    this.group.visible(false);
+    this.group.getLayer()?.draw();
+  }
 
   // ---------------- Assets ----------------
-  private loadPizzaTexture(): Promise<void> {
+  private async loadPizzaTexture(): Promise<void> {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
-      img.onload = () => { this.pizzaHTMLImage = img; resolve(); };
+      img.onload = () => {
+        this.pizzaHTMLImage = img;
+        resolve();
+      };
       img.onerror = (e) => reject(e);
       img.src = this.PIZZA_SRC;
     });
@@ -68,7 +142,13 @@ export class Minigame1ScreenView implements View {
 
   // ---------------- Drawing ----------------
   private drawBackground() {
-    const bg = new Konva.Rect({ x: 0, y: 0, width: this.width, height: this.height, fill: "#f8fafc" });
+    const bg = new Konva.Rect({
+      x: 0,
+      y: 0,
+      width: this.width,
+      height: this.height,
+      fill: "#f8fafc",
+    });
     this.group.add(bg);
     bg.moveToBottom();
   }
@@ -90,32 +170,106 @@ export class Minigame1ScreenView implements View {
     const x = this.pizzaCenter.x - d / 2;
     const y = this.pizzaCenter.y - d / 2;
 
-    this.basePizzaImageNode = new Konva.Image({ image: this.pizzaHTMLImage, x, y, width: d, height: d, opacity: 0.25 });
+    this.basePizzaImageNode = new Konva.Image({
+      image: this.pizzaHTMLImage,
+      x,
+      y,
+      width: d,
+      height: d,
+      opacity: 0.25,
+    });
 
     this.pizzaGroup.add(plate, this.basePizzaImageNode);
   }
 
   private drawHUD() {
     // Back button (top-left)
-    const backBtn = this.makeButton({ x: 24, y: 24, w: 180, h: 44, label: "Back to Menu", onClick: () => this.onBack?.() });
+    const backBtn = this.makeButton({
+      x: 24,
+      y: 24,
+      w: 180,
+      h: 44,
+      label: "Back to Menu",
+      onClick: () => this.onBack?.(),
+    });
 
     // Right column anchor
     const colCenterX = this.width * 0.68;
     const colW = 420;
     const colX = colCenterX - colW / 2;
 
-    const title = new Konva.Text({ x: colX, y: 80, width: colW, text: "Make a whole pizza", fontSize: 34, fontStyle: "bold", fontFamily: "Arial", fill: "#0f172a", align: "center" });
+    const title = new Konva.Text({
+      x: colX,
+      y: 80,
+      width: colW,
+      text: "Make a whole pizza",
+      fontSize: 34,
+      fontStyle: "bold",
+      fontFamily: "Arial",
+      fill: "#0f172a",
+      align: "center",
+    });
 
-    this.sumText = new Konva.Text({ x: colX, y: 130, width: colW, text: `Current: 0/1`, fontSize: 22, fontFamily: "Arial", fill: "#0f172a", align: "center" });
+    this.sumText = new Konva.Text({
+      x: colX,
+      y: 130,
+      width: colW,
+      text: `Current: 0/1`,
+      fontSize: 22,
+      fontFamily: "Arial",
+      fill: "#0f172a",
+      align: "center",
+    });
 
-    this.statusText = new Konva.Text({ x: colX, y: 160, width: colW, text: "Click a fraction to add a slice", fontSize: 18, fontFamily: "Arial", fill: "#334155", align: "center" });
+    this.statusText = new Konva.Text({
+      x: colX,
+      y: 160,
+      width: colW,
+      text: "Click a fraction to add a slice",
+      fontSize: 18,
+      fontFamily: "Arial",
+      fill: "#334155",
+      align: "center",
+    });
 
     const resetBtn = new Konva.Group({ x: colCenterX - 130, y: 190 });
-    const resetRect = new Konva.Rect({ width: 260, height: 44, cornerRadius: 12, fill: "#ffffff", stroke: "#94a3b8", strokeWidth: 2, shadowColor: "black", shadowOpacity: 0.08, shadowBlur: 8, shadowOffset: { x: 0, y: 2 } });
-    const resetTxt = new Konva.Text({ x: 0, y: 0, width: 260, height: 44, align: "center", verticalAlign: "middle", text: "Reset", fontSize: 22, fontFamily: "Arial", fill: "#0f172a" });
+    const resetRect = new Konva.Rect({
+      width: 260,
+      height: 44,
+      cornerRadius: 12,
+      fill: "#ffffff",
+      stroke: "#94a3b8",
+      strokeWidth: 2,
+      shadowColor: "black",
+      shadowOpacity: 0.08,
+      shadowBlur: 8,
+      shadowOffset: { x: 0, y: 2 },
+    });
+    const resetTxt = new Konva.Text({
+      x: 0,
+      y: 0,
+      width: 260,
+      height: 44,
+      align: "center",
+      verticalAlign: "middle",
+      text: "Reset",
+      fontSize: 22,
+      fontFamily: "Arial",
+      fill: "#0f172a",
+    });
     resetBtn.add(resetRect, resetTxt);
-    resetBtn.on("mouseenter", () => { resetRect.fill("#f1f5f9"); const stage = resetBtn.getStage(); if (stage) stage.container().style.cursor = "pointer"; this.group.getLayer()?.batchDraw(); });
-    resetBtn.on("mouseleave", () => { resetRect.fill("#ffffff"); const stage = resetBtn.getStage(); if (stage) stage.container().style.cursor = "default"; this.group.getLayer()?.batchDraw(); });
+    resetBtn.on("mouseenter", () => {
+      resetRect.fill("#f1f5f9");
+      const stage = resetBtn.getStage();
+      if (stage) stage.container().style.cursor = "pointer";
+      this.group.getLayer()?.batchDraw();
+    });
+    resetBtn.on("mouseleave", () => {
+      resetRect.fill("#ffffff");
+      const stage = resetBtn.getStage();
+      if (stage) stage.container().style.cursor = "default";
+      this.group.getLayer()?.batchDraw();
+    });
     resetBtn.on("click", () => this.resetGame());
 
     this.uiGroup.add(backBtn, title, this.sumText, this.statusText, resetBtn);
@@ -124,7 +278,9 @@ export class Minigame1ScreenView implements View {
   private drawButtons(fracs: Rational[]) {
     // Right column (under reset), centered
     const colCenterX = this.width * 0.68;
-    const w = 280, h = 56, gap = 16;
+    const w = 280;
+    const h = 56;
+    const gap = 16;
     const startX = colCenterX - w / 2;
     const startY = 250;
 
@@ -132,17 +288,32 @@ export class Minigame1ScreenView implements View {
       const y = startY + i * (h + gap);
 
       // Button
-      const btn = this.makeButton({ x: startX, y, w, h, label: r.toString(), onClick: () => this.tryAdd(r) });
+      const btn = this.makeButton({
+        x: startX,
+        y,
+        w,
+        h,
+        label: r.toString(),
+        onClick: () => this.tryAdd(r),
+      });
 
       // Image slice thumbnail to the LEFT of the button
       const thumbRadius = 28;
-      const thumb = this.makeSliceThumbnail(r, { x: startX - (thumbRadius * 2 + 18), y: y + (h - thumbRadius * 2) / 2 }, thumbRadius);
+      const thumb = this.makeSliceThumbnail(
+        r,
+        { x: startX - (thumbRadius * 2 + 18), y: y + (h - thumbRadius * 2) / 2 },
+        thumbRadius,
+      );
 
       this.uiGroup.add(thumb, btn);
     });
   }
 
-  private makeSliceThumbnail(r: Rational, pos: { x: number; y: number }, radius: number): Konva.Group {
+  private makeSliceThumbnail(
+    r: Rational,
+    pos: { x: number; y: number },
+    radius: number,
+  ): Konva.Group {
     const g = new Konva.Group({ x: pos.x, y: pos.y, width: radius * 2, height: radius * 2 });
 
     // Clip a small wedge from the pizza image
@@ -157,24 +328,78 @@ export class Minigame1ScreenView implements View {
     });
 
     if (this.pizzaHTMLImage) {
-      const img = new Konva.Image({ image: this.pizzaHTMLImage, x: 0, y: 0, width: radius * 2, height: radius * 2 });
+      const img = new Konva.Image({
+        image: this.pizzaHTMLImage,
+        x: 0,
+        y: 0,
+        width: radius * 2,
+        height: radius * 2,
+      });
       g.add(img);
     } else {
       // Fallback if image not ready (rare)
-      g.add(new Konva.Circle({ x: radius, y: radius, radius, fill: "#fde68a", stroke: "#b91c1c", strokeWidth: 2 }));
+      g.add(
+        new Konva.Circle({
+          x: radius,
+          y: radius,
+          radius,
+          fill: "#fde68a",
+          stroke: "#b91c1c",
+          strokeWidth: 2,
+        }),
+      );
     }
 
     return g;
   }
 
-  private makeButton(opts: { x: number; y: number; w: number; h: number; label: string; onClick: () => void }) {
+  private makeButton(opts: {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    label: string;
+    onClick: () => void;
+  }) {
     const g = new Konva.Group({ x: opts.x, y: opts.y });
-    const rect = new Konva.Rect({ width: opts.w, height: opts.h, cornerRadius: 12, fill: "#ffffff", stroke: "#94a3b8", strokeWidth: 2, shadowColor: "black", shadowOpacity: 0.08, shadowBlur: 8, shadowOffset: { x: 0, y: 2 } });
-    const text = new Konva.Text({ x: 0, y: 0, width: opts.w, height: opts.h, align: "center", verticalAlign: "middle", text: opts.label, fontSize: 22, fontFamily: "Arial", fill: "#0f172a" });
+    const rect = new Konva.Rect({
+      width: opts.w,
+      height: opts.h,
+      cornerRadius: 12,
+      fill: "#ffffff",
+      stroke: "#94a3b8",
+      strokeWidth: 2,
+      shadowColor: "black",
+      shadowOpacity: 0.08,
+      shadowBlur: 8,
+      shadowOffset: { x: 0, y: 2 },
+    });
+    const text = new Konva.Text({
+      x: 0,
+      y: 0,
+      width: opts.w,
+      height: opts.h,
+      align: "center",
+      verticalAlign: "middle",
+      text: opts.label,
+      fontSize: 22,
+      fontFamily: "Arial",
+      fill: "#0f172a",
+    });
     g.add(rect, text);
 
-    g.on("mouseenter", () => { rect.fill("#f1f5f9"); const stage = g.getStage(); if (stage) stage.container().style.cursor = "pointer"; this.group.getLayer()?.batchDraw(); });
-    g.on("mouseleave", () => { rect.fill("#ffffff"); const stage = g.getStage(); if (stage) stage.container().style.cursor = "default"; this.group.getLayer()?.batchDraw(); });
+    g.on("mouseenter", () => {
+      rect.fill("#f1f5f9");
+      const stage = g.getStage();
+      if (stage) stage.container().style.cursor = "pointer";
+      this.group.getLayer()?.batchDraw();
+    });
+    g.on("mouseleave", () => {
+      rect.fill("#ffffff");
+      const stage = g.getStage();
+      if (stage) stage.container().style.cursor = "default";
+      this.group.getLayer()?.batchDraw();
+    });
     g.on("click touchstart", opts.onClick);
 
     return g;
@@ -187,7 +412,9 @@ export class Minigame1ScreenView implements View {
     this.statusText.text("Click a fraction to add a slice");
 
     // Remove previous wedges
-    this.pizzaGroup.getChildren((n) => n.getAttr("data-wedge") === true).forEach((n) => n.destroy());
+    this.pizzaGroup
+      .getChildren((n) => n.getAttr("data-wedge") === true)
+      .forEach((n) => n.destroy());
     this.group.getLayer()?.draw();
   }
 
@@ -238,30 +465,5 @@ export class Minigame1ScreenView implements View {
     this.pizzaGroup.add(g);
   }
 }
-
-// --------- Minimal Rational helper ----------
-class Rational {
-  readonly n: number; readonly d: number;
-  constructor(n: number, d: number) {
-    if (d === 0) throw new Error("denominator cannot be 0");
-    const sign = d < 0 ? -1 : 1;
-    const nn = n * sign;
-    const dd = Math.abs(d);
-    const g = gcd(Math.abs(nn), dd);
-    this.n = nn / g; this.d = dd / g;
-  }
-  static zero() { return new Rational(0, 1); }
-  static one() { return new Rational(1, 1); }
-  toNumber() { return this.n / this.d; }
-  toString() { return `${this.n}/${this.d}`; }
-  add(r: Rational) { return new Rational(this.n * r.d + r.n * this.d, this.d * r.d); }
-  sub(r: Rational) { return new Rational(this.n * r.d - r.n * this.d, this.d * r.d); }
-  gt(r: Rational) { return this.n * r.d > r.n * this.d; }
-  closeTo(r: Rational, eps: Rational) { return this.sub(r).abs().toNumber() <= eps.toNumber(); }
-  abs() { return new Rational(Math.abs(this.n), this.d); }
-  clampMinZero() { return this.gt(Rational.zero()) ? this : Rational.zero(); }
-}
-
-function gcd(a: number, b: number): number { while (b !== 0) { const t = b; b = a % b; a = t; } return Math.max(1, Math.abs(a)); }
 
 export default Minigame1ScreenView;

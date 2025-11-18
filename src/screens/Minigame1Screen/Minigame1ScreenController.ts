@@ -1,6 +1,8 @@
 import { ScreenController } from "../../types.ts";
-import type { ScreenSwitcher } from "../../types.ts";
+
 import { Minigame1ScreenView } from "./Minigame1ScreenView.ts";
+
+import type { ScreenSwitcher } from "../../types.ts";
 
 export class Minigame1ScreenController extends ScreenController {
   private readonly view: Minigame1ScreenView;

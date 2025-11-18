@@ -3,6 +3,7 @@
  * AND BUILDING UPON IT
  */
 import Konva from "konva";
+
 import type { View } from "../../types.ts";
 
 export class MainMenuScreenView implements View {
@@ -36,9 +37,18 @@ export class MainMenuScreenView implements View {
     title.offsetX(title.width() / 2);
     this.group.add(title);
 
-    // Difficulty selector
-    const difficulties = ["EASY", "MEDIUM", "HARD"];
-    const difficultyGroup = new Konva.Group({ x: width / 2, y: 2.5 * (height / 5) });
+    //-----------------------------Difficulty Bar Section-------------------------------------------------------------------
+    // defining values that are necessary for the difficulty selector
+    const difficulties = ["Easy", "Medium", "Hard"];
+
+    // creating a group that displays difficulties
+    const difficultyGroup = new Konva.Group({
+      // placing selector in the middle, right above the start button
+      x: width / 2,
+      y: 2.5 * (height / 5),
+    });
+
+    // creating the level labels
     let currentX = 0;
     const spacing = 40;
 
@@ -64,8 +74,25 @@ export class MainMenuScreenView implements View {
 
     // Start Button (center)
     const startButtonGroup = new Konva.Group();
-    const startButton = new Konva.Rect({ x: width / 2, y: 3 * (height / 5) + 20, width: 200, height: 60, fill: "gray", cornerRadius: 10, stroke: "black", strokeWidth: 2 });
-    const startText = new Konva.Text({ x: width / 2, y: 3 * (height / 5) + 38, text: "START GAME", fontSize: 24, fontFamily: "Arial", fill: "white", align: "center" });
+    const startButton = new Konva.Rect({
+      x: width / 2,
+      y: 3 * (height / 5) + 20,
+      width: 200,
+      height: 60,
+      fill: "gray",
+      cornerRadius: 10,
+      stroke: "black",
+      strokeWidth: 2,
+    });
+    const startText = new Konva.Text({
+      x: width / 2,
+      y: 3 * (height / 5) + 38,
+      text: "START GAME",
+      fontSize: 24,
+      fontFamily: "Arial",
+      fill: "white",
+      align: "center",
+    });
     startButton.offsetX(startButton.width() / 2);
     startText.offsetX(startText.width() / 2);
     startButtonGroup.add(startButton, startText);
@@ -74,8 +101,25 @@ export class MainMenuScreenView implements View {
 
     // Play Minigame Button (moved farther right)
     const miniButtonGroup = new Konva.Group();
-    const miniButton = new Konva.Rect({ x: width / 2 + 300, y: 3.65 * (height / 5), width: 220, height: 60, fill: "gray", cornerRadius: 10, stroke: "black", strokeWidth: 2 });
-    const miniText = new Konva.Text({ x: width / 2 + 300, y: 3.65 * (height / 5) + 18, text: "PLAY MINIGAME", fontSize: 24, fontFamily: "Arial", fill: "white", align: "center" });
+    const miniButton = new Konva.Rect({
+      x: width / 2 + 300,
+      y: 3.65 * (height / 5),
+      width: 220,
+      height: 60,
+      fill: "gray",
+      cornerRadius: 10,
+      stroke: "black",
+      strokeWidth: 2,
+    });
+    const miniText = new Konva.Text({
+      x: width / 2 + 300,
+      y: 3.65 * (height / 5) + 18,
+      text: "PLAY MINIGAME",
+      fontSize: 24,
+      fontFamily: "Arial",
+      fill: "white",
+      align: "center",
+    });
     miniButton.offsetX(miniButton.width() / 2);
     miniText.offsetX(miniText.width() / 2);
     miniButtonGroup.add(miniButton, miniText);
@@ -84,8 +128,25 @@ export class MainMenuScreenView implements View {
 
     // Help Button (below)
     const helpButtonGroup = new Konva.Group();
-    const helpButton = new Konva.Rect({ x: width / 2, y: 4 * (height / 5), width: 200, height: 60, fill: "gray", cornerRadius: 10, stroke: "black", strokeWidth: 2 });
-    const helpText = new Konva.Text({ x: width / 2, y: 4 * (height / 5) + 18, text: "HELP", fontSize: 24, fontFamily: "Arial", fill: "white", align: "center" });
+    const helpButton = new Konva.Rect({
+      x: width / 2,
+      y: 4 * (height / 5),
+      width: 200,
+      height: 60,
+      fill: "gray",
+      cornerRadius: 10,
+      stroke: "black",
+      strokeWidth: 2,
+    });
+    const helpText = new Konva.Text({
+      x: width / 2,
+      y: 4 * (height / 5) + 18,
+      text: "HELP",
+      fontSize: 24,
+      fontFamily: "Arial",
+      fill: "white",
+      align: "center",
+    });
     helpButton.offsetX(helpButton.width() / 2);
     helpText.offsetX(helpText.width() / 2);
     helpButtonGroup.add(helpButton, helpText);
@@ -109,9 +170,17 @@ export class MainMenuScreenView implements View {
     this.group.getLayer()?.draw();
   }
 
-  show(): void { this.group.visible(true); this.group.getLayer()?.draw(); }
-  hide(): void { this.group.visible(false); this.group.getLayer()?.draw(); }
-  getGroup(): Konva.Group { return this.group; }
+  show(): void {
+    this.group.visible(true);
+    this.group.getLayer()?.draw();
+  }
+  hide(): void {
+    this.group.visible(false);
+    this.group.getLayer()?.draw();
+  }
+  getGroup(): Konva.Group {
+    return this.group;
+  }
 }
 
 export default MainMenuScreenView;

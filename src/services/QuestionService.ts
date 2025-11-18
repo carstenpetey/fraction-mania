@@ -7,8 +7,8 @@ export type Operation = "+" | "-" | "*" | "/";
 export type QuestionConfig = {
   operations: Operation[];
   numOperations: number;
-  maxNumeratorDigits: number;
-  maxDenominatorDigits: number;
+  maxNumerator: number;
+  maxDenominator: number;
   numChoices?: number;
   commonDenominator?: boolean;
 };
@@ -23,8 +23,8 @@ export class QuestionService {
   private static readonly defaultConfig: QuestionConfig = {
     operations: ["+", "-", "*", "/"],
     numOperations: 1,
-    maxNumeratorDigits: 1,
-    maxDenominatorDigits: 1,
+    maxNumerator: 8,
+    maxDenominator: 8,
     numChoices: 4,
     commonDenominator: true,
   };
@@ -55,8 +55,8 @@ export class QuestionService {
    * Generate a random proper fraction
    */
   private static generateFraction(config: QuestionConfig): Fraction {
-    const maxNum = 10 ** config.maxNumeratorDigits - 1;
-    const maxDenom = 10 ** config.maxDenominatorDigits - 1;
+    const maxNum = config.maxNumerator;
+    const maxDenom = config.maxDenominator;
 
     // generate denominator first (minimum 2 to allow proper fractions)
     const denominator = Math.max(2, DiceService.rollDice(maxDenom));
@@ -78,10 +78,12 @@ export class QuestionService {
     // denominator should be at least 2 to allow proper fractions
     denominator = Math.max(2, denominator);
 
-    // maxNum should be at least 1 and less than denominator
-    const maxNum = Math.max(1, Math.min(10 ** config.maxNumeratorDigits - 1, denominator - 1));
+    const maxNum = config.maxNumerator;
 
-    const numerator = DiceService.rollDice(maxNum);
+    // Constrain it to be less than denominator (for proper fractions)
+    const actualMaxNum = Math.max(1, Math.min(maxNum, denominator - 1));
+
+    const numerator = DiceService.rollDice(actualMaxNum);
     return new Fraction(numerator, denominator).simplify();
   }
 
@@ -95,8 +97,7 @@ export class QuestionService {
     // generate common denominator if needed
     let commonDenom: number | undefined;
     if (config.commonDenominator && config.operations.some((op) => op === "+" || op === "-")) {
-      const maxDenom = 10 ** config.maxDenominatorDigits - 1;
-      commonDenom = DiceService.rollDice(maxDenom);
+      commonDenom = DiceService.rollDice(config.maxDenominator);
     }
 
     // generate required number of operations
