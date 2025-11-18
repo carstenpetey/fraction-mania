@@ -4,12 +4,14 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "start": "vite",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint --cache --report-unused-disable-directives . && prettier --check .",
     "lint:fix": "(eslint --fix --cache --report-unused-disable-directives . || true) && prettier --write .",
-    "prepare": "cd .. && husky"
+    "prepare": "cd .. && husky",
+    "test": "vitest run"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.15",
@@ -18,10 +20,13 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^6.0.0",
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^24.10.1",
     "eslint": "^9.38.0",
     "husky": "^9.1.7",
     "prettier": "^3.6.2",
     "typescript": "~5.9.3",
-    "vite": "^7.1.7"
+    "vite": "^7.1.7",
+    "vitest": "^4.0.8"
   }
 }
