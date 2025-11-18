@@ -94,6 +94,7 @@ export class PauseScreenView implements View {
         rect.fill("gray");
         g.getLayer()?.draw();
       });
+      // ignore this comment
 
       // click
       g.on("click", () => btn.onClick());

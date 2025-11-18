@@ -23,6 +23,7 @@ export class MainMenuScreenController extends ScreenController {
       () => this.handleStartClick(),
       () => this.handleHelpClick(),
       (level: string) => this.handleDifficultySelect(level),
+      () => this.handleMinigameClick(), // NEW
     );
   }
 
@@ -37,6 +38,11 @@ export class MainMenuScreenController extends ScreenController {
   private handleHelpClick(): void {
     // once help is clicked, send user to learn more
     this.screenSwitcher.switchToScreen({ type: "help" });
+  }
+
+  private handleMinigameClick(): void {
+    // switch to the minigame screen
+    this.screenSwitcher.switchToScreen({ type: "minigame1" });
   }
 
   private handleDifficultySelect(level: string): void {
