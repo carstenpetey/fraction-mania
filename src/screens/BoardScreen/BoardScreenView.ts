@@ -1,5 +1,7 @@
 import Konva from "konva";
 
+import { ButtonFactory } from "../../util/ButtonFactory.ts";
+
 import { BoardRenderer } from "./utils/BoardRenderer.ts";
 
 import type { View } from "../../types.ts";
@@ -59,71 +61,22 @@ export class BoardScreenView implements View {
 
   // TODO Create a Button factory to avoid duplicates as this
   private drawPauseButton(): void {
-    const pauseButtonGroup = new Konva.Group();
-
-    const pauseButton = new Konva.Rect({
-      x: this.width - 100,
-      y: 100,
-      width: 60,
-      height: 60,
-      fill: "gray",
-      cornerRadius: 10,
-      stroke: "black",
-      strokeWidth: 2,
-    });
-
-    const pauseText = new Konva.Text({
-      x: this.width - 100,
-      y: 100,
-      text: "P",
-      fontSize: 24,
-      fontFamily: "Arial",
-      fill: "white",
-      align: "center",
-    });
-
-    pauseButton.offsetX(pauseButton.width() / 2);
-    pauseText.offsetX(pauseText.width() / 2);
-    pauseButton.offsetY(pauseButton.height() / 2);
-    pauseText.offsetY(pauseText.height() / 2);
-    pauseButtonGroup.add(pauseButton);
-    pauseButtonGroup.add(pauseText);
-    pauseButtonGroup.on("click", this.onPauseClick);
+    const pauseButtonGroup = ButtonFactory.construct()
+      .pos(this.width * 0.9, this.height * 0.1)
+      .text("Pause")
+      .onClick(this.onPauseClick)
+      .build();
     this.viewGroup.add(pauseButtonGroup);
   }
 
   // TODO Create a Button factory to avoid duplicates as this
   private drawDiceButton(): void {
-    const diceButtonGroup = new Konva.Group();
-
-    const diceButton = new Konva.Rect({
-      x: this.width / 2,
-      y: this.height - 100,
-      width: 60,
-      height: 60,
-      fill: "gray",
-      cornerRadius: 10,
-      stroke: "black",
-      strokeWidth: 2,
-    });
-
-    const diceText = new Konva.Text({
-      x: this.width / 2,
-      y: this.height - 100,
-      text: "D6",
-      fontSize: 24,
-      fontFamily: "Arial",
-      fill: "white",
-      align: "center",
-    });
-
-    diceButton.offsetX(diceButton.width() / 2);
-    diceText.offsetX(diceText.width() / 2);
-    diceButton.offsetY(diceButton.height() / 2);
-    diceText.offsetY(diceText.height() / 2);
-    diceButtonGroup.add(diceButton);
-    diceButtonGroup.add(diceText);
-    diceButtonGroup.on("click", this.onDiceClick);
+    const diceButtonGroup = ButtonFactory.construct()
+      .pos(this.width * 0.5, this.height * 0.9)
+      .width(200)
+      .text("Roll Dice")
+      .onClick(this.onDiceClick)
+      .build();
     this.viewGroup.add(diceButtonGroup);
   }
 
