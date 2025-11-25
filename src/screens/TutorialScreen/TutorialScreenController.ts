@@ -24,11 +24,11 @@ export class TutorialScreenController extends ScreenController {
   }
 
   override show(): void {
-    super.show();
+    this.view.getGroup().visible(true);
   }
 
   override hide(): void {
-    super.hide();
+    this.view.getGroup().visible(false);
   }
 
   /**

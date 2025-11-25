@@ -97,6 +97,7 @@ class App implements ScreenSwitcher {
     this.boardScreenControoler.hide();
     this.pizzaMinigameController.hide();
     this.endScreenController.hide();
+    this.tutorialScreenController.hide();
     this.minigame2Controller.hide();
     this.current = "menu";
 
@@ -184,6 +185,7 @@ class App implements ScreenSwitcher {
     this.pauseScreenController.hide();
     this.pizzaMinigameController.hide();
     this.endScreenController.hide();
+    this.tutorialScreenController.hide();
 
     // Show the requested screen based on the screen type
     switch (screen.type) {

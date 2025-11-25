@@ -1,5 +1,7 @@
 import Konva from "konva";
 
+import { FONT_FAMILY } from "../../constants.ts";
+
 import type { View } from "../../types.ts";
 
 /**
@@ -19,6 +21,7 @@ export class TutorialScreenView implements View {
     // Game Over
     this.title = new Konva.Text({
       text: "HOW TO PLAY",
+      fontFamily: FONT_FAMILY,
       fontSize: 48,
       fontStyle: "bold",
       align: "center",
@@ -32,10 +35,11 @@ export class TutorialScreenView implements View {
       text:
         "Hello Player!\n\n" +
         "Welcome to Fraction Mania!" +
-        "Your mission is to navigate through the paths, and pass the obstacles.\n\n" +
+        " Your mission is to navigate through the paths, and pass the obstacles.\n\n" +
         "At each point you will be tasked with a minigame, complete it to progress.\n\n" +
         "Reach the finish, or be trapped forever!\n\n",
       fontSize: 20,
+      fontFamily: FONT_FAMILY,
       align: "center",
       x: 0,
       width: stageWidth,
@@ -86,7 +90,6 @@ export class TutorialScreenView implements View {
    */
   show(): void {
     this.root.visible(true);
-    this.root.getLayer()?.draw();
   }
 
   /**
@@ -94,7 +97,6 @@ export class TutorialScreenView implements View {
    */
   hide(): void {
     this.root.visible(false);
-    this.root.getLayer()?.draw();
   }
 
   getGroup(): Konva.Group {
