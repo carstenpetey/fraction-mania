@@ -24,7 +24,7 @@ export class ButtonFactory {
   private dtext: string = "Button";
   private dfont: number = 24;
   private dBBaseColor: string = "gray";
-  private readonly dBHoverColor: string = "black";
+  private dBHoverColor: string = "black";
   private donClick: (() => void) | null = null;
 
   static construct(): ButtonFactory {
@@ -92,7 +92,7 @@ export class ButtonFactory {
    *  Button background color on hover.
    */
   hoverColor(color: string): this {
-    this.dBBaseColor = color;
+    this.dBHoverColor = color;
     return this;
   }
 

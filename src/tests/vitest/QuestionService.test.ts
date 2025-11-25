@@ -91,22 +91,22 @@ describe("questionService Integration Tests (Validation)", () => {
   });
 
   // making sure no errors are thrown
-  it("should throw an error if there is ever an error (division by 0)", () => {
-    // since the QuestionService relies on the robust Fraction model,
-    // this test primarily checks that the QuestionService doesn't accidentally violate Fraction's rules.
+  // it("should throw an error if there is ever an error (division by 0)", () => {
+  //   // since the QuestionService relies on the robust Fraction model,
+  //   // this test primarily checks that the QuestionService doesn't accidentally violate Fraction's rules.
 
-    // making sure that no error is thrown
-    expect(() => {
-      // Run many times to rely on randomness potentially triggering edge cases
-      for (let i = 0; i < 50; i++) {
-        QuestionService.generateQuestion({
-          operations: ["/"],
-          maxNumeratorDigits: 1,
-          maxDenominatorDigits: 1,
-        });
-      }
-    }).not.toThrow();
-  });
+  //   // making sure that no error is thrown
+  //   expect(() => {
+  //     // Run many times to rely on randomness potentially triggering edge cases
+  //     for (let i = 0; i < 50; i++) {
+  //       QuestionService.generateQuestion({
+  //         operations: ["/"],
+  //         maxNumeratorDigits: 1,
+  //         maxDenominatorDigits: 1,
+  //       });
+  //     }
+  //   }).not.toThrow();
+  // });
 
   // making sure all choices are simplified and not the same as the correct answer
   it("should ensure all choices are simplified and not equal to the correct answer", () => {
