@@ -23,7 +23,7 @@ export type View = {
 export type Screen =
   | { type: "menu" }
   | { type: "board" }
-  | { type: "game"; difficulty: string }
+  | { type: "game" }
   | { type: "help" }
   | { type: "pause" }
   | { type: "end" }

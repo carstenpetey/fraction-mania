@@ -38,8 +38,9 @@ export class QuestionScreenController extends ScreenController {
       this.model.incrementScore();
       // After feedback, switch to score screen
       setTimeout(() => {
-        this.model.setQuestion(QuestionService.generateQuestion(this.questionConfig));
-        this.updateView();
+        // this.model.setQuestion(QuestionService.generateQuestion(this.questionConfig));
+        // this.updateView();
+        this.screenSwitcher.switchToScreen({ type: "board" });
       }, 500);
     }
 

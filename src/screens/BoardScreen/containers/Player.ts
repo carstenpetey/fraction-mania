@@ -18,6 +18,13 @@ export class Player {
   }
 
   /*
+   * Returns current tile.
+   */
+  public getCurrentTile(): Tile {
+    return this.currentTile;
+  }
+
+  /*
    * Chech if player has reached the end tile.
    */
   public isAtEnd(): boolean {
