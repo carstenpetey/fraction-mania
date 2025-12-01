@@ -21,7 +21,7 @@ export class MessageRenderer {
       x: STAGE_WIDTH / 2,
       y: STAGE_HEIGHT / 2,
       fontSize: 48,
-      fontFamily: "Orbitron",
+      fontFamily: "Courier New",
       fill: "#FFD700",
       fontStyle: "bold",
       align: "center",

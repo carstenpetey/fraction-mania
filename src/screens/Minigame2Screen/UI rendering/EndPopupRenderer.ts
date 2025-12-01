@@ -78,7 +78,7 @@ export class EndPopupRenderer {
       cornerRadius: 12,
     });
 
-    // text that displays the title of the game
+    // text that displays the title of the message
     const titleText = new Konva.Text({
       x: W / 2,
       y: 20,
@@ -108,7 +108,7 @@ export class EndPopupRenderer {
     // creating a return button using the button factory
     const returnButton = ButtonFactory.construct()
       .pos(W / 2, H - 40)
-      .text("RETURN TO MENU")
+      .text("RETURN TO GAME")
       .width(200)
       .height(45)
       .fontSize(22)

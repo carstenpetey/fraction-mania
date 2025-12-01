@@ -1,117 +1,82 @@
-// THIS FILE RENDERS THE TIME COMPONENT OF THE MINIGAME (SPACESHIP PROGRESS BAR)
+// UI rendering/TimeRenderer.ts
 import Konva from "konva";
 
-// importing dimensions
+// using width to implement horizontal progress bar
 import { STAGE_WIDTH } from "../../../constants.ts";
 
-// creating a type that stores the image of the ship and the duration of the timer
+// configuration for the spacechip (just the image)
 type ShipTimerOptions = {
   timerShip: Konva.Image;
-  duration: number;
 };
 
 /**
- * handles the visual ship animation (timer) and triggers the onFinish handler.
+ * this class is responsible for rendering the space ship progress bar
  */
 export class ShipTimerRenderer {
-  // --- MEMBERS ---
+  // container that holds the progress bar
   private readonly container: Konva.Group;
+
+  // the image of the space ship
   private readonly timerShip: Konva.Image;
-  private readonly duration: number;
 
-  // animation
-  private timerTween: Konva.Tween | null = null;
+  // calculating the total width taken up
+  private readonly totalWidth: number;
 
-  // progress bar
-  private readonly progress: Konva.Rect;
-
+  // constructor given the image
   constructor(options: ShipTimerOptions) {
+    // assigning the image
     this.timerShip = options.timerShip;
-    this.duration = options.duration;
 
-    // --- holds ship and progress bar ---
+    // defining the progress bar container
     this.container = new Konva.Group({
       x: 0,
       y: 20,
     });
 
-    // resize ship inside container
+    // setup ship size
     this.timerShip.width(60);
     this.timerShip.height(30);
     this.timerShip.x(0);
     this.timerShip.y(-15);
 
-    // --- progress bar ---
-    this.progress = new Konva.Rect({
-      x: 0,
-      y: this.timerShip.height() / 2 - 3,
-      width: STAGE_WIDTH - 40,
-      height: 6,
-      fill: "#555",
-      cornerRadius: 3,
-      opacity: 0.4,
-    });
+    // calculate the distance the ship can travel (from one end of the screen to another)
+    this.totalWidth = STAGE_WIDTH - 40 - this.timerShip.width();
 
-    // add to container
-    this.container.add(this.progress);
     this.container.add(this.timerShip);
 
-    // move container into the same layer as the ship (the ship is already added by the View)
+    // ensure we don't crash if the ship was already in a layer
     const layer = this.timerShip.getLayer();
     if (layer) {
-      const parent = this.timerShip.getParent();
-      if (parent) parent.add(this.container);
       this.timerShip.moveTo(this.container);
     }
   }
 
   /**
-   * sets up the animation (spaceship flying across the screen)
-   * @param onExpire handler that determines what happens when the timer expires
+   * updating the position of the ship given a percentage of the time that has passed
    */
-  private setupTimerTween(onExpire: () => void): void {
-    this.timerTween?.destroy();
+  public updatePosition(percentage: number): void {
+    // clamp percentage between 0 and 1
+    const clamped = Math.max(0, Math.min(1, percentage));
 
-    const targetX = this.progress.width() - this.timerShip.width();
+    // move x according to the percentage
+    this.timerShip.x(this.totalWidth * clamped);
 
-    this.timerTween = new Konva.Tween({
-      node: this.container,
-      x: targetX,
-      duration: this.duration,
-      onFinish: () => onExpire(),
-    });
-  }
-
-  /**
-   * starting the timer
-   */
-  public start(onExpire: () => void): void {
-    if (!this.timerTween) {
-      this.setupTimerTween(onExpire);
-    }
-    this.timerTween?.play();
-  }
-
-  /**
-   * stopping the timer
-   */
-  public stop(): void {
-    this.timerTween?.pause();
-  }
-
-  /**
-   * resetting container + ship
-   */
-  public reset(): void {
-    this.stop();
-    this.container.x(0);
-    this.timerTween?.destroy();
-    this.timerTween = null;
+    // redraw the layer
     this.container.getLayer()?.batchDraw();
   }
 
   /**
-   * returns the container (not the ship alone)
+   * resetting the ships position
+   */
+  public reset(): void {
+    // reset its position
+    this.timerShip.x(0);
+    this.container.getLayer()?.batchDraw();
+  }
+
+  /**
+   * simple function to obtain the current progress bar
+   * @returns the progress bar
    */
   public getNode(): Konva.Group {
     return this.container;

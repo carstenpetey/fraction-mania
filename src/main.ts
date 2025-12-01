@@ -76,7 +76,7 @@ class App implements ScreenSwitcher {
     this.pizzaMinigameController = new PizzaMinigameController(this);
     this.endScreenController = new EndScreenController(this);
     this.equationHelpScreenController = new EquationHelpScreenController(this);
-    this.minigame2Controller = new SpaceRescueController(this);
+    this.minigame2Controller = new SpaceRescueController(this, this.gameState);
     this.tutorialScreenController = new TutorialScreenController(this);
 
     // Add all screen groups to the layer

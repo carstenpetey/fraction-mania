@@ -39,6 +39,7 @@ export class SpaceRescueModel {
     // reseting the progress so game can be played again
     this.currentTargetIndex = 0;
 
+    // strikes should be 0
     this.resetStrikes();
   }
 
@@ -67,7 +68,7 @@ export class SpaceRescueModel {
       // create new unique fraction
       const newFraction = new Fraction(N, D).simplify();
 
-      // checking if duplicate
+      // checking if duplicate of some (at least one) fraction in the list exists already
       const isDuplicate = uniqueFractions.some((existingFraction) =>
         existingFraction.equals(newFraction),
       );
@@ -90,9 +91,12 @@ export class SpaceRescueModel {
    */
   public sortFractions(fractions: Fraction[], order: "ascending" | "descending"): Fraction[] {
     // sorting depending on order
+    // defining a comparator function
     const sorted = [...fractions].sort((a, b) => {
+      // since fractions are strings, we want to evaluate them properly
       const valA = a.toDecimal();
       const valB = b.toDecimal();
+      // if ascending, return a - b since we want this to be negative
       return order === "ascending" ? valA - valB : valB - valA;
     });
     return sorted;
@@ -119,7 +123,7 @@ export class SpaceRescueModel {
    * @returns list of sorted fractions
    */
   public getTargetOrder(): Fraction[] {
-    return this.targetOrder; // Safely exposes the private array
+    return this.targetOrder;
   }
 
   /**

@@ -1,8 +1,10 @@
 //------------------------------------------
 // Initial Imports
 //------------------------------------------
-
 import Konva from "konva";
+
+// importing  Yixuan's timer component
+import { useTimer } from "../../components/Timer.ts";
 
 // --- RENDERER IMPORTS ---
 import { AsteroidRenderer } from "./UI rendering/AsteroidRenderer.ts";
@@ -14,6 +16,7 @@ import { PromptRenderer } from "./UI rendering/PromptRenderer.ts";
 import { ShipTimerRenderer } from "./UI rendering/TimeRenderer.ts";
 
 // --- MODEL IMPORTS ---
+import type { Timer } from "../../components/Timer.ts";
 import type { Fraction } from "../../models/Fraction.ts";
 import type { View } from "../../types.ts";
 import type { SpaceRescueModel } from "./SpaceRescueModel";
@@ -53,7 +56,6 @@ export class SpaceRescueView implements View {
   // group that is meant to be visible for the end popup
   private endPopupGroup: Konva.Group | null = null;
 
-  // instance of ShipTimerRenderer, which manages the ship image and its Konva Tween
   // the view delegates all timing/ship animation commands
   private timerRenderer!: ShipTimerRenderer;
 
@@ -62,6 +64,9 @@ export class SpaceRescueView implements View {
 
   // spaceship image
   private timerShip!: Konva.Image;
+
+  // using Yixuan's timer component
+  private gameTimer: Timer | null = null;
 
   //------------------------------------------
   // Constructor
@@ -94,19 +99,16 @@ export class SpaceRescueView implements View {
     });
 
     // loading spaceship image
-    // loading spaceship image
     Konva.Image.fromURL("/spaceship.png", (image) => {
       this.timerShip = image;
 
       // initialize time renderer (this wraps the ship into a container)
       this.timerRenderer = new ShipTimerRenderer({
         timerShip: this.timerShip,
-        duration: 25,
       });
 
       // add the whole timer container to game elements
       this.gameElementsGroup.add(this.timerRenderer.getNode());
-
       this.group.getLayer()?.draw();
     });
   }
@@ -123,7 +125,7 @@ export class SpaceRescueView implements View {
     // checking if image is correctly loaded
     if (!this.asteroidImage) return;
 
-    // calling the renderer
+    // calling the renderer using configuration
     this.fractionNodes = AsteroidRenderer.createAsteroids({
       fractions: model.asteroids,
       asteroidImage: this.asteroidImage,
@@ -144,18 +146,54 @@ export class SpaceRescueView implements View {
   }
 
   /**
-   * starts the timer
+   * starts the timer using Yixuan's timer component
+   * @param duration the duration in seconds
    */
-  public startTimer(): void {
-    if (!this.timerRenderer) return;
-    this.timerRenderer.start(this.onTimerEnd);
+  public startTimer(duration: number): void {
+    // destory any existing timers
+    if (this.gameTimer) {
+      this.gameTimer.destroy();
+    }
+
+    // setting up a new timer
+    this.gameTimer = useTimer({
+      x: 20,
+      y: 60,
+      initialTime: duration,
+      mode: "countdown",
+      fontSize: 26,
+      borderRadius: 0,
+      padding: 0,
+      backgroundColor: "#0A0A20",
+      onTick: (timeLeft) => {
+        // calculate percentage for the ship
+        const timeElapsed = duration - timeLeft;
+        const percentage = timeElapsed / duration;
+
+        // update the ship position manually
+        this.timerRenderer.updatePosition(percentage);
+      },
+      onCountdownComplete: () => {
+        // update the position of the ship
+        this.timerRenderer.updatePosition(1.0);
+        if (this.onTimerEnd) this.onTimerEnd();
+      },
+    });
+
+    // adding the timer to the group
+    this.gameElementsGroup.add(this.gameTimer.getGroup());
+    this.gameTimer.start();
+
+    // showing the prompt text
+    this.promptText.moveToTop();
+    this.group.getLayer()?.batchDraw();
   }
 
   /**
-   * stops the timer
+   * stopping the timer
    */
   public stopTimer() {
-    this.timerRenderer?.stop();
+    this.gameTimer?.stop();
   }
 
   // ------------------------------------------
@@ -288,6 +326,12 @@ export class SpaceRescueView implements View {
     // reset timer visuals
     this.timerRenderer?.reset();
 
+    // reset any existing timer component
+    if (this.gameTimer) {
+      this.gameTimer.destroy();
+      this.gameTimer = null;
+    }
+
     // hide game elements until popup is dismissed
     this.gameElementsGroup.visible(false);
 
@@ -296,7 +340,7 @@ export class SpaceRescueView implements View {
   }
 
   // ------------------------------------------
-  //  Core View Management (Remains)
+  //  Core View Management
   // ------------------------------------------
   /**
    * function that updates visual feedback
@@ -305,21 +349,21 @@ export class SpaceRescueView implements View {
   public updateVisuals(model: SpaceRescueModel): void {
     const orderText =
       model.sortOrder === "ascending" ? "SMALLEST to LARGEST" : "LARGEST to SMALLEST";
-
     this.promptText.text(
       `Click the asteroids in order: ${orderText} (Next: #${model.getNextTargetIndex() + 1})`,
     );
+
     this.promptText.offsetX(this.promptText.width() / 2);
 
-    // pre-compute sorted target order as string keys for fast lookup
+    // force text to top just in case
+    this.promptText.moveToTop();
+
     const targetKeys = model.getTargetOrder().map((f) => f.toString());
     const nextIndex = model.getNextTargetIndex();
 
-    // apply opacity to each asteroid depending on progress
     this.fractionNodes.forEach((nodeGroup, fractionKey) => {
       const fractionPosition = targetKeys.indexOf(fractionKey);
       const alreadyCleared = fractionPosition > -1 && fractionPosition < nextIndex;
-
       nodeGroup.opacity(alreadyCleared ? 0.3 : 1.0);
     });
 
@@ -331,10 +375,12 @@ export class SpaceRescueView implements View {
     this.group.visible(true);
     this.group.getLayer()?.draw();
   }
+
   hide() {
     this.group.visible(false);
     this.group.getLayer()?.draw();
   }
+
   getGroup() {
     return this.group;
   }
