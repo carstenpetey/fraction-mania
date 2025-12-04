@@ -155,37 +155,41 @@ export class QuestionService {
 
   /**
    * Generate plausible wrong answers and shuffle with correct answer
+   * Guarantees exactly numChoices answers
    */
   private static generateChoices(correctAnswer: Fraction, numChoices: number): Fraction[] {
     const choices = [correctAnswer];
-    let attempts = 0;
-    const maxAttempts = 20;
 
     // generate wrong answers by modifying the correct answer
-    while (choices.length < numChoices && attempts < maxAttempts) {
-      attempts++;
+    while (choices.length < numChoices) {
+      let attempts = 0;
+      const maxAttempts = 50; // increased per choice attempt
+      let added = false;
 
-      // If we've tried too many times with modifications, generate a new fraction
-      if (attempts > 10 && choices.length < numChoices) {
-        // Ensure denominator is at least 2 and numerator is between 1 and denominator-1
+      // Try modifications first
+      while (attempts < maxAttempts && !added) {
+        attempts++;
+        const mod = this.generateModification();
+        const wrongAnswer = mod(correctAnswer).simplify();
+
+        if (!choices.some((c) => c.equals(wrongAnswer))) {
+          choices.push(wrongAnswer);
+          added = true;
+        }
+      }
+
+      // If modifications exhausted, generate completely different fraction
+      if (!added) {
         const denom = Math.max(2, correctAnswer.denominator + choices.length);
         const num = Math.max(1, Math.min(denom - 1, correctAnswer.numerator));
         const newChoice = new Fraction(num, denom).simplify();
 
         if (!choices.some((c) => c.equals(newChoice))) {
           choices.push(newChoice);
-          attempts = 0; // Reset attempts for next choice
-          continue;
+        } else {
+          // Last resort: use a simple fraction as distinct as possible
+          choices.push(new Fraction(1, denom + choices.length));
         }
-      }
-
-      const mod = this.generateModification();
-      const wrongAnswer = mod(correctAnswer).simplify();
-
-      // Ensure this wrong answer isn't accidentally equal to any existing choice
-      if (!choices.some((c) => c.equals(wrongAnswer))) {
-        choices.push(wrongAnswer);
-        attempts = 0; // Reset attempts for next choice
       }
     }
 

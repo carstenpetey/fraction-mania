@@ -233,7 +233,7 @@ export class QuestionScreenView implements View {
   updateAnswerChoices(choices: Fraction[]): void {
     choices.forEach((choice, i) => {
       if (this.answerTexts[i]) {
-        this.answerTexts[i].text(`${choice.numerator}/${choice.denominator}`);
+        this.answerTexts[i].text(choice.toString());
         this.answerTexts[i].offsetX(this.answerTexts[i].width() / 2);
         this.answerTexts[i].offsetY(this.answerTexts[i].height() / 2);
       }

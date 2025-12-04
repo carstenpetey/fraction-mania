@@ -30,4 +30,19 @@ export class Player {
   public isAtEnd(): boolean {
     return this.currentTile.type.type === "end";
   }
+
+  /*
+   * Checks if player is ahead of given entity on board.
+   * @param entity - entity to check for
+   */
+  public isAheadOf(entity: Player): boolean {
+    let ctile: Tile | null = this.currentTile;
+    while (ctile != null) {
+      if (ctile === entity.currentTile) {
+        return true;
+      }
+      ctile = ctile.nextTile.north ?? ctile.nextTile.east ?? ctile.nextTile.south ?? null;
+    }
+    return false;
+  }
 }

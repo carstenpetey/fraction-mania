@@ -19,4 +19,11 @@ export class Tile {
   getType(): TileType {
     return this.type;
   }
+
+  /*
+   * Placeholder to avoid null entries.
+   */
+  public static getNullTile(): Tile {
+    return new Tile("null", { type: "normal" }, { north: null, east: null, south: null });
+  }
 }

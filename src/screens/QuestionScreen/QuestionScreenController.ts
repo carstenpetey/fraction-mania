@@ -4,6 +4,7 @@ import { ScreenController } from "../../types.ts";
 import { QuestionScreenModel } from "./QuestionScreenModel.ts";
 import { QuestionScreenView } from "./QuestionScreenView.ts";
 
+import type { GameState } from "../../models/GameState.ts";
 import type { ScreenSwitcher } from "../../types.ts";
 
 export class QuestionScreenController extends ScreenController {
@@ -11,64 +12,62 @@ export class QuestionScreenController extends ScreenController {
   private readonly view: QuestionScreenView;
   private readonly questionConfig: QuestionConfig;
   private readonly screenSwitcher: ScreenSwitcher;
+  private readonly gameState: GameState;
+  private readonly onComplete?: (passed: boolean) => void;
 
-  constructor(screenSwitcher: ScreenSwitcher, questionConfig: QuestionConfig) {
-    super();
+  // private readonly screenSwitcher: ScreenSwitcher;
+
+  constructor(
+    screenSwitcher: ScreenSwitcher,
+    questionConfig: QuestionConfig,
+    gameState: GameState,
+    onComplete?: (passed: boolean) => void,
+  ) {
+    super(); // must use this cause GameScreenController extends ScreenController
+    // this.screenSwitcher = screenSwitcher;
     this.questionConfig = questionConfig;
     this.screenSwitcher = screenSwitcher;
+    this.gameState = gameState;
+    this.onComplete = onComplete;
 
-    // initialize model with first question
+    // generate new question and initialize model
     this.model = new QuestionScreenModel(QuestionService.generateQuestion(this.questionConfig));
-    // intializes the view with callback handlers for user interactions
     this.view = new QuestionScreenView(
       (index) => this.handleAnswerClick(index),
       () => this.handleHelpClick(),
     );
+    //index is the button that was clicked
+    //the line (index)  => this.handleClick(intex) gets passed into GameScreenView, where it is executed
+    //note, the constructor is already called in the main.ts so this calls it again when the answer is clicked
   }
 
-  /**
-   * handles click on answer choice
-   */
   private handleAnswerClick(index: number): void {
-    // index represents the answer choice that was clicked
     const isCorrect = this.model.checkAnswer(index);
 
-    if (isCorrect) {
-      // delays switching screens so the user can see feedback
-      setTimeout(() => {
-        this.screenSwitcher.switchToScreen({ type: "board" });
-      }, 500);
-    }
+    // record result
+    this.gameState.setPassedQuestion(isCorrect);
 
     this.view.flashFeedback(isCorrect, index);
+
+    // hide popup after feedback and notify caller if provided
+    setTimeout(() => {
+      this.view.hide();
+      if (this.onComplete) {
+        this.onComplete(isCorrect);
+      }
+    }, 500);
   }
 
-  /**
-   * handles click on help button
-   */
+  // making sure that help button leads to right place
   private handleHelpClick(): void {
     this.screenSwitcher.switchToScreen({ type: "equation_help" });
   }
 
-  /**
-   * generates a new question and updates the view
-   */
-  generateNewQuestion(config: QuestionConfig): void {
-    this.model.generateNewQuestion(config);
-    this.updateView();
-  }
-
-  /**
-   * calls updateView() which updates the question, then shows the view
-   */
   startQuestion(): void {
     this.updateView();
     this.show();
   }
 
-  /**
-   * updates the view with the current question
-   */
   private updateView(): void {
     const expression = this.model.getCurrentExpression();
     const choices = this.model.getAnswerChoices();
@@ -77,9 +76,6 @@ export class QuestionScreenController extends ScreenController {
     this.view.updateAnswerChoices(choices);
   }
 
-  /**
-   * returns the view instance
-   */
   getView(): QuestionScreenView {
     return this.view;
   }

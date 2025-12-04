@@ -138,6 +138,8 @@ export class SpaceRescueController extends ScreenController {
         this.view.showSuccessPopup(() => {
           this.view.hideEndPopup();
           this.hide();
+          // add bonus roll points for success
+          this.gameState.addBonus(4);
           this.screenSwitcher.switchToScreen({ type: "board" });
         });
       }

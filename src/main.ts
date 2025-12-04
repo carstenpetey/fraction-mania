@@ -67,13 +67,14 @@ class App implements ScreenSwitcher {
     // Initialize all screen controllers
     // Each controller manages a Model, View, and handles user interactions
     this.mainMenuController = new MainMenuScreenController(this, this.gameState);
-    this.boardScreenControoler = new BoardScreenController(this);
+    this.boardScreenControoler = new BoardScreenController(this, this.gameState);
     this.pauseScreenController = new PauseScreenController(this, this.currentDifficulty);
     this.gameScreenController = new QuestionScreenController(
       this,
-      this.getDifficultyConfig(this.gameState.getDifficulty()),
+      this.getDifficultyConfig("Easy"),
+      this.gameState,
     );
-    this.pizzaMinigameController = new PizzaMinigameController(this);
+    this.pizzaMinigameController = new PizzaMinigameController(this, this.gameState);
     this.endScreenController = new EndScreenController(this);
     this.equationHelpScreenController = new EquationHelpScreenController(this);
     this.minigame2Controller = new SpaceRescueController(this, this.gameState);
@@ -197,6 +198,12 @@ class App implements ScreenSwitcher {
         // allows interaction with board when returning from question screen
         this.boardScreenControoler.getView().getGroup().listening(true);
         this.boardScreenControoler.show();
+        // Ensure UI (buttons) reflect the current board phase after overlays close
+        try {
+          this.boardScreenControoler.refreshView();
+        } catch {
+          // ignore if refreshView is not present
+        }
         break;
       case "pause":
         this.pauseScreenController.show();
@@ -213,11 +220,16 @@ class App implements ScreenSwitcher {
           this.storedGameController = null;
           this.gameScreenController.show();
         } else {
+          // TODO Really big mess, better to clean it up and move configuration part to gameState/controller
+
           // Get the configuration for the selected difficulty
           const config = this.getDifficultyConfig(this.gameState.getDifficulty());
-          // generate a new question
-          this.gameScreenController.generateNewQuestion(config);
-          // start the question (updates view and shows the popup)
+          this.gameScreenController.getView().getGroup().remove();
+          // creates a new controller with the correct difficulty config
+          this.gameScreenController = new QuestionScreenController(this, config, this.gameState);
+          // add the new view to the layer
+          this.layer.add(this.gameScreenController.getView().getGroup());
+          // start the question (updates view and shows the screen)
           this.gameScreenController.startQuestion();
         }
         break;
@@ -242,6 +254,53 @@ class App implements ScreenSwitcher {
 
     this.current = screen.type;
     this.layer.draw();
+  }
+
+  // Expose current screen for controllers that need to wait on navigation
+  getCurrentScreen(): Screen["type"] {
+    return this.current;
+  }
+
+  // Present the question overlay and resolve when it completes.
+  // Returns true if the player answered correctly, false otherwise.
+  async presentQuestion(): Promise<boolean> {
+    return new Promise((resolve) => {
+      const config = this.getDifficultyConfig(this.gameState.getDifficulty());
+
+      // Remove any existing question view group to avoid duplicates
+      try {
+        this.gameScreenController.getView().getGroup().remove();
+      } catch {
+        // ignore
+      }
+
+      // Create controller with callback
+      this.gameScreenController = new QuestionScreenController(
+        this,
+        config,
+        this.gameState,
+        (passed: boolean) => {
+          // When question completes, switch back to board and resolve.
+          // Use switchToScreen so standard screen-show logic runs (including refresh).
+          this.switchToScreen({ type: "board" });
+          resolve(passed);
+        },
+      );
+
+      // Add view group and show overlay
+      this.layer.add(this.gameScreenController.getView().getGroup());
+      // Show overlay without calling switchToScreen("game") which would recreate
+      // the controller and drop the onComplete callback. Instead, disable board
+      // interactions and start the question view directly.
+      try {
+        this.boardScreenControoler.getView().getGroup().listening(false);
+      } catch {
+        // ignore
+      }
+      this.gameScreenController.startQuestion();
+      this.current = "game";
+      this.layer.draw();
+    });
   }
 }
 

@@ -12,8 +12,9 @@ export class BoardGenerator {
     this.branchChance = branchChance;
   }
 
-  public generateLineBoard(n: number): Tile {
+  public generateLineBoard(n: number): { start: Tile; minigame: Tile } {
     const endTile = new Tile(`t_end`, { type: "end" }, { north: null, east: null, south: null });
+    let firstMinigame = endTile;
     let next = endTile;
 
     for (let i = n - 1; i >= 1; i--) {
@@ -34,8 +35,12 @@ export class BoardGenerator {
 
       const tile = new Tile(`t_${i}`, type, successors);
       next = tile;
+
+      if (isMinigame) {
+        firstMinigame = next;
+      }
     }
 
-    return next;
+    return { start: next, minigame: firstMinigame };
   }
 }
