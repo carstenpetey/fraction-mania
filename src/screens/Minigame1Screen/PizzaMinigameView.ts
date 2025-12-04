@@ -9,6 +9,7 @@ type ViewCallbacks = {
   onBack: () => void;
   onReset: () => void;
   onSliceClick: (fraction: Fraction) => void;
+  onStart: () => void; // called when user clicks start button
   onReady?: () => void; // called after texture + UI are ready
   fractionOptions: Fraction[];
 };
@@ -22,6 +23,7 @@ export class PizzaMinigameView implements View {
   private readonly group: Konva.Group = new Konva.Group({ visible: true });
   private readonly pizzaGroup: Konva.Group = new Konva.Group();
   private readonly uiGroup: Konva.Group = new Konva.Group();
+  private readonly popupGroup: Konva.Group = new Konva.Group({ visible: true });
 
   private readonly width = window.innerWidth;
   private readonly height = window.innerHeight;
@@ -39,11 +41,16 @@ export class PizzaMinigameView implements View {
   private sumText!: Konva.Text;
   private statusText!: Konva.Text;
   private pizzasCompletedText!: Konva.Text;
+  private timerText!: Konva.Text;
+
+  // track current answer choices
+  private answerChoices: Konva.Group[] = [];
 
   // Callbacks + data from controller
   private readonly onBack: () => void;
   private readonly onReset: () => void;
   private readonly onSliceClick: (fraction: Fraction) => void;
+  private readonly onStart: () => void;
   private readonly onReady?: () => void;
   private readonly fractionOptions: Fraction[];
 
@@ -51,12 +58,14 @@ export class PizzaMinigameView implements View {
     this.onBack = callbacks.onBack;
     this.onReset = callbacks.onReset;
     this.onSliceClick = callbacks.onSliceClick;
+    this.onStart = callbacks.onStart;
     this.onReady = callbacks.onReady;
     this.fractionOptions = callbacks.fractionOptions;
 
-    // Order: background (root) -> pizzaGroup -> uiGroup
+    // Order: background (root) -> pizzaGroup -> uiGroup -> popupGroup (on top)
     this.group.add(this.pizzaGroup);
     this.group.add(this.uiGroup);
+    this.group.add(this.popupGroup);
 
     this.drawBackground();
 
@@ -65,6 +74,7 @@ export class PizzaMinigameView implements View {
         this.drawPizzaBaseWithImage();
         this.drawHUD();
         this.drawButtons(this.fractionOptions);
+        this.drawStartPopup();
 
         // Signal controller that the view is ready
         this.onReady?.();
@@ -107,6 +117,12 @@ export class PizzaMinigameView implements View {
   public updatePizzasCompleted(count: number): void {
     if (!this.pizzasCompletedText) return;
     this.pizzasCompletedText.text(`Pizzas completed: ${count}`);
+    this.group.getLayer()?.batchDraw();
+  }
+
+  public updateTimer(seconds: number): void {
+    if (!this.timerText) return;
+    this.timerText.text(`Time: ${seconds}s`);
     this.group.getLayer()?.batchDraw();
   }
 
@@ -168,6 +184,39 @@ export class PizzaMinigameView implements View {
       stroke: "#22c55e",
       strokeWidth: 14,
       shadowColor: "#22c55e",
+      shadowBlur: 32,
+      shadowOpacity: 0.9,
+      opacity: 0.9,
+      listening: false,
+    });
+
+    this.pizzaGroup.add(glow);
+    this.group.getLayer()?.batchDraw();
+
+    const tween = new Konva.Tween({
+      node: glow,
+      duration: 0.5,
+      opacity: 0,
+      onFinish: () => {
+        glow.destroy();
+        this.group.getLayer()?.batchDraw();
+      },
+    });
+    tween.play();
+  }
+
+  /**
+   * copied positive feedback code from above to flash negative feedbakc on wrong answer
+   * probbaly could make this more efficient if necessary
+   */
+  public flashPizzaOverflow(): void {
+    const glow = new Konva.Circle({
+      x: this.pizzaCenter.x,
+      y: this.pizzaCenter.y,
+      radius: this.pizzaRadius + 24,
+      stroke: "#ef4444",
+      strokeWidth: 14,
+      shadowColor: "#ef4444",
       shadowBlur: 32,
       shadowOpacity: 0.9,
       opacity: 0.9,
@@ -252,6 +301,19 @@ export class PizzaMinigameView implements View {
       .text("Back to Menu")
       .onClick(() => this.onBack())
       .build();
+
+    // timer display
+    this.timerText = new Konva.Text({
+      x: this.width - 200,
+      y: 24,
+      width: 180,
+      text: `Time: 15s`,
+      fontSize: 24,
+      fontStyle: "bold",
+      fontFamily: "Arial",
+      fill: "#0f172a",
+      align: "right",
+    });
 
     // Right column anchor
     const colCenterX = this.width * 0.68;
@@ -338,6 +400,7 @@ export class PizzaMinigameView implements View {
 
     this.uiGroup.add(
       backBtn,
+      this.timerText,
       title,
       this.sumText,
       this.statusText,
@@ -365,16 +428,30 @@ export class PizzaMinigameView implements View {
         .onClick(() => this.onSliceClick(r))
         .build();
 
-      // Image slice thumbnail to the LEFT of the button
+      // percent slice image to the right of the button
       const thumbRadius = 28;
       const thumb = this.makeSliceThumbnail(
         r,
-        { x: startX - (thumbRadius * 2 + 18), y: y + (h - thumbRadius * 2) / 2 },
+        { x: startX + w + 18, y: y + (h - thumbRadius * 2) / 2 },
         thumbRadius,
       );
 
       this.uiGroup.add(thumb, btn);
+      this.answerChoices.push(thumb, btn);
     });
+  }
+
+  /**
+   * removes old answer choices, makes new ones
+   */
+  public updateButtons(newOptions: Fraction[]): void {
+    // remove old answers
+    this.answerChoices.forEach((node) => node.destroy());
+    this.answerChoices = [];
+
+    // make new answers
+    this.drawButtons(newOptions);
+    this.group.getLayer()?.batchDraw();
   }
 
   private makeSliceThumbnail(
@@ -418,6 +495,72 @@ export class PizzaMinigameView implements View {
     }
 
     return g;
+  }
+
+  // make the start game popup
+  private drawStartPopup(): void {
+    // make background overlay
+    const overlay = new Konva.Rect({
+      x: 0,
+      y: 0,
+      width: this.width,
+      height: this.height,
+      fill: "#000000",
+      opacity: 0.6,
+      listening: true,
+    });
+
+    const popupWidth = 500;
+    const popupHeight = 300;
+    const popupX = (this.width - popupWidth) / 2;
+    const popupY = (this.height - popupHeight) / 2;
+
+    const popupBg = new Konva.Rect({
+      x: popupX,
+      y: popupY,
+      width: popupWidth,
+      height: popupHeight,
+      fill: "#ffffff",
+      cornerRadius: 12,
+      shadowColor: "#000000",
+      shadowBlur: 10,
+      shadowOpacity: 0.5,
+    });
+
+    const instructionText = new Konva.Text({
+      x: popupX,
+      y: popupY + 60,
+      width: popupWidth,
+      text: "Select a new slice from the choices and try to build a whole pizza!",
+      fontSize: 22,
+      fontFamily: "Arial",
+      fill: "#0f172a",
+      align: "center",
+      padding: 20,
+    });
+
+    // start button from button factory
+    const startBtn = ButtonFactory.construct()
+      .pos(this.width / 2, popupY + popupHeight - 80)
+      .text("Start")
+      .width(180)
+      .onClick(() => {
+        this.hideStartPopup();
+        this.onStart();
+      })
+      .build();
+
+    this.popupGroup.add(overlay, popupBg, instructionText, startBtn);
+  }
+
+  public showStartPopup(): void {
+    this.popupGroup.visible(true);
+    this.group.getLayer()?.draw();
+  }
+
+  public hideStartPopup(): void {
+    this.popupGroup.visible(false);
+    this.group.getLayer()?.draw();
   }
 }
 

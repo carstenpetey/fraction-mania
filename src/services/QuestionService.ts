@@ -59,7 +59,8 @@ export class QuestionService {
     const maxDenom = config.maxDenominator;
 
     // generate denominator first (minimum 2 to allow proper fractions)
-    const denominator = Math.max(2, DiceService.rollDice(maxDenom));
+    // generate from 2 to maxDenom (2 was showing up too often)
+    const denominator = DiceService.rollDice(maxDenom - 1) + 1;
 
     // generate numerator that's smaller than denominator (minimum 1)
     const maxPossibleNum = Math.max(1, Math.min(maxNum, denominator - 1));
@@ -97,7 +98,8 @@ export class QuestionService {
     // generate common denominator if needed
     let commonDenom: number | undefined;
     if (config.commonDenominator && config.operations.some((op) => op === "+" || op === "-")) {
-      commonDenom = DiceService.rollDice(config.maxDenominator);
+      // generate from 2 to maxDenom (2 was showing up too often)
+      commonDenom = DiceService.rollDice(config.maxDenominator - 1) + 1;
     }
 
     // generate required number of operations

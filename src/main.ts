@@ -71,7 +71,7 @@ class App implements ScreenSwitcher {
     this.pauseScreenController = new PauseScreenController(this, this.currentDifficulty);
     this.gameScreenController = new QuestionScreenController(
       this,
-      this.getDifficultyConfig("Easy"),
+      this.getDifficultyConfig(this.gameState.getDifficulty()),
     );
     this.pizzaMinigameController = new PizzaMinigameController(this);
     this.endScreenController = new EndScreenController(this);
@@ -146,8 +146,8 @@ class App implements ScreenSwitcher {
         return {
           operations: ["+", "-", "*", "/"],
           numOperations: 1,
-          maxNumerator: 12,
-          maxDenominator: 12,
+          maxNumerator: 10,
+          maxDenominator: 10,
           numChoices: 4,
           commonDenominator: false,
         };
@@ -178,7 +178,10 @@ class App implements ScreenSwitcher {
   switchToScreen(screen: Screen): void {
     // Hide all screens first by setting their Groups to invisible
     this.mainMenuController.hide();
-    this.boardScreenControoler.hide();
+    // Don't hide board when showing question popup (enables popup capability)
+    if (screen.type !== "game") {
+      this.boardScreenControoler.hide();
+    }
     this.gameScreenController.hide();
     this.pauseScreenController.hide();
     this.pizzaMinigameController.hide();
@@ -191,12 +194,18 @@ class App implements ScreenSwitcher {
         this.mainMenuController.show();
         break;
       case "board":
+        // allows interaction with board when returning from question screen
+        this.boardScreenControoler.getView().getGroup().listening(true);
         this.boardScreenControoler.show();
         break;
       case "pause":
         this.pauseScreenController.show();
         break;
       case "game":
+        // question screen a popup overlay so the board is still technically visible
+        // this disables board interactions while popup is showing
+        this.boardScreenControoler.getView().getGroup().listening(false);
+
         // Check if we're returning from help and should restore previous state
         if (this.storedGameController) {
           // Restore the stored game controller
@@ -206,12 +215,9 @@ class App implements ScreenSwitcher {
         } else {
           // Get the configuration for the selected difficulty
           const config = this.getDifficultyConfig(this.gameState.getDifficulty());
-          this.gameScreenController.getView().getGroup().remove();
-          // creates a new controller with the correct difficulty config
-          this.gameScreenController = new QuestionScreenController(this, config);
-          // add the new view to the layer
-          this.layer.add(this.gameScreenController.getView().getGroup());
-          // start the question (updates view and shows the screen)
+          // generate a new question
+          this.gameScreenController.generateNewQuestion(config);
+          // start the question (updates view and shows the popup)
           this.gameScreenController.startQuestion();
         }
         break;

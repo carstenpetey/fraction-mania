@@ -21,21 +21,24 @@ export class MainMenuScreenView implements View {
     const width = window.innerWidth;
     const height = window.innerHeight;
 
-    // Title
-    const title = new Konva.Text({
-      x: width / 2,
-      y: height / 5,
-      text: "Fraction Mania",
-      fontSize: 90,
-      fontFamily: "Arial",
-      fill: "gray",
-      stroke: "black",
-      strokeWidth: 3,
-      align: "center",
-      fontStyle: "bold",
-    });
-    title.offsetX(title.width() / 2);
-    this.group.add(title);
+    // logo instead of text
+    const img = new Image();
+    img.onload = () => {
+      const logoWidth = Math.min(400, width * 0.6);
+      const logoHeight = (img.height / img.width) * logoWidth;
+      const logo = new Konva.Image({
+        image: img,
+        x: width / 2,
+        y: height / 4,
+        width: logoWidth,
+        height: logoHeight,
+      });
+      logo.offsetX(logoWidth / 2);
+      logo.offsetY(logoHeight / 2);
+      this.group.add(logo);
+      this.group.getLayer()?.draw();
+    };
+    img.src = "/new logo fraction mania.png";
 
     //-----------------------------Difficulty Bar Section-------------------------------------------------------------------
     // defining values that are necessary for the difficulty selector

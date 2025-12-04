@@ -33,10 +33,14 @@ export class PizzaMinigameModel {
   /**
    * Reset for a new pizza with a random starting slice.
    * Returns that starting fraction.
+   * note: starting pizza size will alwaya be less than 1/4
    */
   resetWithRandomStart(): Fraction {
     this.current = new Fraction(0, 1);
-    const start = this.options[Math.floor(Math.random() * this.options.length)];
+    const quarter = new Fraction(1, 4);
+    // Filter options to only include fractions less than 1/4
+    const validStarts = this.options.filter((opt) => opt.toDecimal() < quarter.toDecimal());
+    const start = validStarts[Math.floor(Math.random() * validStarts.length)];
     this.current = start;
     return start;
   }
