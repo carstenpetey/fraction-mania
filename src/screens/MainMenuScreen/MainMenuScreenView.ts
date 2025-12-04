@@ -4,6 +4,8 @@
  */
 import Konva from "konva";
 
+import { ButtonFactory } from "../../util/ButtonFactory.ts";
+
 import type { View } from "../../types.ts";
 
 export class MainMenuScreenView implements View {
@@ -14,7 +16,6 @@ export class MainMenuScreenView implements View {
     onStartClick: () => void,
     onHelpClick: () => void,
     onDifficultySelect: (level: string) => void,
-    onMinigameClick: () => void,
   ) {
     this.group = new Konva.Group({ visible: true });
 
@@ -75,86 +76,31 @@ export class MainMenuScreenView implements View {
     difficultyGroup.offsetX(currentX / 2);
     this.group.add(difficultyGroup);
 
-    // Start Button (center)
-    const startButtonGroup = new Konva.Group();
-    const startButton = new Konva.Rect({
-      x: width / 2,
-      y: 3 * (height / 5) + 20,
-      width: 200,
-      height: 60,
-      fill: "gray",
-      cornerRadius: 10,
-      stroke: "black",
-      strokeWidth: 2,
-    });
-    const startText = new Konva.Text({
-      x: width / 2,
-      y: 3 * (height / 5) + 38,
-      text: "START GAME",
-      fontSize: 24,
-      fontFamily: "Arial",
-      fill: "white",
-      align: "center",
-    });
-    startButton.offsetX(startButton.width() / 2);
-    startText.offsetX(startText.width() / 2);
-    startButtonGroup.add(startButton, startText);
-    startButtonGroup.on("click", onStartClick);
-    this.group.add(startButtonGroup);
+    // Start Button (with button factory now)
+    const startButtonFactory = ButtonFactory.construct()
+      .pos(width / 2, 3 * (height / 5) + 20 + 30)
+      .text("START GAME")
+      .width(200)
+      .height(60)
+      .fontSize(24)
+      .backColor("#df1e19")
+      .onClick(onStartClick)
+      .build(); // Creates the final Konva.Group
 
-    // Play Minigame Button (moved farther right)
-    const miniButtonGroup = new Konva.Group();
-    const miniButton = new Konva.Rect({
-      x: width / 2 + 300,
-      y: 3.65 * (height / 5),
-      width: 220,
-      height: 60,
-      fill: "gray",
-      cornerRadius: 10,
-      stroke: "black",
-      strokeWidth: 2,
-    });
-    const miniText = new Konva.Text({
-      x: width / 2 + 300,
-      y: 3.65 * (height / 5) + 18,
-      text: "PLAY MINIGAME",
-      fontSize: 24,
-      fontFamily: "Arial",
-      fill: "white",
-      align: "center",
-    });
-    miniButton.offsetX(miniButton.width() / 2);
-    miniText.offsetX(miniText.width() / 2);
-    miniButtonGroup.add(miniButton, miniText);
-    miniButtonGroup.on("click", onMinigameClick);
-    this.group.add(miniButtonGroup);
+    this.group.add(startButtonFactory);
 
-    // Help Button (below)
-    const helpButtonGroup = new Konva.Group();
-    const helpButton = new Konva.Rect({
-      x: width / 2,
-      y: 4 * (height / 5),
-      width: 200,
-      height: 60,
-      fill: "gray",
-      cornerRadius: 10,
-      stroke: "black",
-      strokeWidth: 2,
-    });
-    const helpText = new Konva.Text({
-      x: width / 2,
-      y: 4 * (height / 5) + 18,
-      text: "HELP",
-      fontSize: 24,
-      fontFamily: "Arial",
-      fill: "white",
-      align: "center",
-    });
-    helpButton.offsetX(helpButton.width() / 2);
-    helpText.offsetX(helpText.width() / 2);
-    helpButtonGroup.add(helpButton, helpText);
-    helpButtonGroup.on("click", onHelpClick);
-    this.group.add(helpButtonGroup);
+    // Help Button (with button factory now)
+    const helpButtonFactory = ButtonFactory.construct()
+      .pos(width / 2, 4 * (height / 5) + 30)
+      .text("HELP")
+      .width(200)
+      .height(60)
+      .fontSize(24)
+      .backColor("#df1e19")
+      .onClick(onHelpClick)
+      .build();
+
+    this.group.add(helpButtonFactory);
   }
 
   public updateDifficultyDisplay(selectedLevel: string): void {

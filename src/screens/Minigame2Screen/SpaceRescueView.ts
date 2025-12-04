@@ -28,7 +28,6 @@ type OnFractionClick = (fraction: Fraction) => void;
 // View Class
 //------------------------------------------
 export class SpaceRescueView implements View {
-  // --- READONLY VARIABLES ---
   // the main top-level Konva Group. This holds all visible elements on the screen.
   private readonly group: Konva.Group;
 
@@ -42,7 +41,6 @@ export class SpaceRescueView implements View {
   // handles display of message on screen
   private readonly messageRenderer!: MessageRenderer;
 
-  // --- MUTABLE VARIABLES ---
   // a map to hold references to the Konva Groups for each asteroid. the map structure allows us
   // to easily handle the updateVisuals() function
   private fractionNodes: Map<string, Konva.Group> = new Map();

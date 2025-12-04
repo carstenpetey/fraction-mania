@@ -88,6 +88,7 @@ export class BoardScreenView implements View {
     this.pauseButtonGroup = ButtonFactory.construct()
       .pos(this.width * 0.9, this.height * 0.1)
       .icon("/pause.svg")
+      .backColor("#df1e19")
       .iconColor("white")
       .onClick(this.onPauseClick)
       .build();
@@ -99,6 +100,7 @@ export class BoardScreenView implements View {
       .pos(this.width * 0.5, this.height * 0.9)
       .width(200)
       .text("Roll Dice")
+      .backColor("#df1e19")
       /* eslint-disable ts/no-misused-promises */
       .onClick(this.onDiceClick)
       .build();

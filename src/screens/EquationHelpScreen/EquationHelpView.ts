@@ -2,6 +2,7 @@
 import Konva from "konva";
 
 import { STAGE_HEIGHT, STAGE_WIDTH } from "../../constants.ts";
+import { ButtonFactory } from "../../util/ButtonFactory.ts";
 
 import type { View } from "../../types.ts";
 
@@ -74,90 +75,75 @@ export class EquationHelpScreenView implements View {
 
   // creating buttons for each operation. should be 4 total
   private createHelpButtons(onVideoSelect: OnVideoSelect): void {
-    // predetermining the size of the buttons, as well as the gap that appears between them visually
-    const width = 280;
-    const height = 60;
-    const gap = 25;
+    // --- Define Constants for Button Dimensions ---
+    const BUTTON_WIDTH = 280;
+    const BUTTON_HEIGHT = 60;
+    const GAP = 25;
+    const HEADER_OFFSET = 50;
 
-    // calculating y poisitioning of each button
-    const totalHeight = topics.length * height + (topics.length - 1) * gap;
-    let currentY = (STAGE_HEIGHT - totalHeight) / 2 - 50;
+    // calculate the initial Y position
+    const totalHeight = topics.length * BUTTON_HEIGHT + (topics.length - 1) * GAP;
+    let currentYTopEdge = (STAGE_HEIGHT - totalHeight) / 2 - HEADER_OFFSET;
 
-    // creating group of buttons for each topic
+    // define the button center X coordinate
+    const buttonCenterX = STAGE_WIDTH / 2;
+
+    // ceate group of buttons for each topic
     topics.forEach((topic) => {
-      const buttonGroup = new Konva.Group();
+      // calculate the center Y coordinate for the factory
+      const buttonCenterY = currentYTopEdge + BUTTON_HEIGHT / 2;
 
-      // rectangle that represents each button
-      const rect = new Konva.Rect({
-        x: STAGE_WIDTH / 2 - width / 2,
-        y: currentY,
-        width,
-        height,
-        fill: "#F0F0F0",
-        stroke: "darkgray",
-        strokeWidth: 2,
-        cornerRadius: 10,
-      });
+      // use button factory to create buttons
+      const buttonGroup = ButtonFactory.construct()
+        .pos(buttonCenterX, buttonCenterY)
+        .text(topic.title)
+        .width(BUTTON_WIDTH)
+        .height(BUTTON_HEIGHT)
+        .fontSize(24)
 
-      // each button will let the user know what topic they will be learning about
-      const text = new Konva.Text({
-        x: STAGE_WIDTH / 2,
-        y: currentY + 18,
-        text: `${topic.title}`,
-        fontSize: 24,
-        fill: "black",
-      });
+        // applying color theme
+        .backColor("#df1e19")
+        .hoverColor("black")
 
-      // offsetting text so that it is centered to the rectangle
-      text.offsetX(text.width() / 2);
+        // attach handler
+        .onClick(() => onVideoSelect(topic.url))
+        .build();
 
-      // adding each button to the group
-      buttonGroup.add(rect, text);
+      // add buttons to group
       this.group.add(buttonGroup);
 
-      // attaching click handler
-      buttonGroup.on("click", () => onVideoSelect(topic.url));
-
-      // updating y (vertical) position so that spacing remains consistent
-      currentY += height + gap;
+      // add gap between buttons
+      currentYTopEdge += BUTTON_HEIGHT + GAP;
     });
   }
 
   // creating back button so user can go back to solving the equation
   private createBackButton(onBackClick: () => void): void {
-    const buttonGroup = new Konva.Group();
+    // defining constats
+    const BUTTON_WIDTH = 120;
+    const BUTTON_HEIGHT = 40;
+    const Y_OFFSET_FROM_BOTTOM = 100;
 
-    // constants that determine where the button will lie
-    const yPos = STAGE_HEIGHT - 60;
-    const width = 120;
-    const height = 40;
+    // calculating position
+    const buttonCenterX = STAGE_WIDTH / 2;
+    const buttonCenterY = STAGE_HEIGHT - Y_OFFSET_FROM_BOTTOM + BUTTON_HEIGHT / 2;
 
-    // creating the button itself
-    const rect = new Konva.Rect({
-      x: STAGE_WIDTH / 2 - width / 2,
-      y: yPos,
-      width,
-      height,
-      fill: "#A0A0A0",
-      stroke: "black",
-      cornerRadius: 5,
-    });
+    // construct using button factory
+    const buttonGroup = ButtonFactory.construct()
+      .pos(buttonCenterX, buttonCenterY)
+      .text("BACK")
+      .width(BUTTON_WIDTH)
+      .height(BUTTON_HEIGHT)
+      .fontSize(20)
+      .backColor("black")
+      .hoverColor("#df1e19")
+      .onClick(onBackClick)
+      .build();
 
-    // text that lets the user know that the button will go back to the equation screen
-    const text = new Konva.Text({
-      x: STAGE_WIDTH / 2,
-      y: yPos + 10,
-      text: "BACK",
-      fontSize: 20,
-      fill: "black",
-    });
-    text.offsetX(text.width() / 2);
-
-    // adding the button to the group
-    buttonGroup.add(rect, text);
-    buttonGroup.on("click", onBackClick);
+    // add button to group
     this.group.add(buttonGroup);
 
+    // add to all buttons
     this.backButtonGroup = buttonGroup;
   }
 

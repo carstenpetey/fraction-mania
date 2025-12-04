@@ -32,7 +32,6 @@ export class AsteroidRenderer {
     const nodes = new Map<string, Konva.Group>();
 
     // defining design parameters
-    const stageHeight = STAGE_HEIGHT;
     const centerX = STAGE_WIDTH / 2;
     const ASTEROID_SIZE = 250;
 
@@ -42,8 +41,8 @@ export class AsteroidRenderer {
       const key = fraction.toString();
 
       // simulating a pseudorandom positional layout
-      const x = centerX + (Math.random() - 0.5) * 1200;
-      const y = stageHeight / 5.5 + index * 160;
+      const x = centerX + (Math.random() - 0.5) * (STAGE_WIDTH * 0.8);
+      const y = STAGE_HEIGHT / 5.5 + index * (STAGE_HEIGHT * 0.15);
 
       // creating new group
       const group = new Konva.Group({ x, y });
