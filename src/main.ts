@@ -255,6 +255,7 @@ class App implements ScreenSwitcher {
         break;
       case "minigame1":
         this.pizzaMinigameController.show();
+        this.pizzaMinigameController.startMinigame();
         break;
       case "minigame2":
         this.minigame2Controller.show();
