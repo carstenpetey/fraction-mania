@@ -40,4 +40,8 @@ export class EndScreenController extends ScreenController {
   getView(): EndScreenView {
     return this.view;
   }
+
+  getModel(): EndScreenModel {
+  return this.model;
+  }
 }
